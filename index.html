@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<title>SEVENTEEN-Inspired Bitcoin Market Analysis Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+  /* Root colors inspired by SEVENTEEN palette - WCAG AA compliant */
+  :root {
+    /* Brand colors - lighter versions for better contrast on dark backgrounds */
+    --cyan: #4DD0E1; /* Lighter cyan for better contrast */
+    --pink: #FF8FC7; /* Lighter pink for better contrast */
+    --purple: #BA68C8; /* Lighter purple for better contrast */
+    --orange: #FFB74D; /* Lighter orange for better contrast */
+    /* Darker versions for buttons/text on light backgrounds */
+    --cyan-dark: #00ACC1;
+    --pink-dark: #E91E63;
+    --purple-dark: #8E24AA;
+    --orange-dark: #F57C00;
+    /* Background colors */
+    --dark-bg: #0A0A0C; /* Darker base for better contrast */
+    --dark-bg-semi: rgba(10, 10, 12, 0.95); /* More opaque for better contrast */
+    --card-bg: rgba(18, 18, 22, 0.95); /* Darker, more opaque cards */
+    --light-bg: #FAFAFD;
+    /* Text colors */
+    --text-light: #FFFFFF; /* Pure white for maximum contrast */
+    --text-light-soft: #E0E0E0; /* Slightly softer white for secondary text */
+    --text-dark: #1A1A1A; /* Dark text for light backgrounds */
+    --shadow-glow-cyan: 0 0 8px var(--cyan);
+    --shadow-glow-pink: 0 0 10px var(--pink);
+    --shadow-glow-purple: 0 0 12px var(--purple);
+    --shadow-glow-orange: 0 0 12px var(--orange);
+  }
+
+  /* Reset and base */
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    /* Darker gradient base with overlay for better contrast */
+    background: 
+      linear-gradient(rgba(10, 10, 12, 0.85), rgba(10, 10, 12, 0.85)),
+      linear-gradient(135deg, var(--cyan-dark), var(--pink-dark), var(--purple-dark), var(--orange-dark));
+    background-size: 100% 100%, 400% 400%;
+    animation: bgShift 20s ease infinite;
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1.5rem 4rem;
+  }
+
+  @keyframes bgShift {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+
+  header {
+    width: 100%;
+    max-width: 1000px;
+    text-align: center;
+    margin-bottom: 2rem;
+    user-select: none;
+  }
+
+  header h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--text-light); /* Pure white for maximum contrast */
+    text-shadow:
+      0 0 10px var(--pink),
+      0 0 20px var(--cyan);
+  }
+  
+  /* Ensure all text elements have proper contrast */
+  p, li, article {
+    color: var(--text-light); /* White text for maximum contrast on dark backgrounds */
+  }
+  
+  strong {
+    color: var(--text-light); /* White for strong text */
+    font-weight: 700;
+  }
+
+  header #report-date {
+    margin-top: 0.3rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1.1px;
+    text-shadow: 0 0 8px var(--orange);
+  }
+
+  main {
+    width: 100%;
+    max-width: 1000px;
+    background: var(--card-bg); /* More opaque for better contrast */
+    border-radius: 12px;
+    box-shadow:
+      0 0 15px var(--pink),
+      0 0 40px var(--cyan);
+    padding: 2rem 2.5rem;
+    overflow-wrap: break-word;
+  }
+
+  section {
+    margin-bottom: 3rem;
+    animation: fadeInUp 1s ease forwards;
+    opacity: 0;
+  }
+  section:nth-child(2) { animation-delay: 0.2s; }
+  section:nth-child(3) { animation-delay: 0.4s; }
+  section:nth-child(4) { animation-delay: 0.6s; }
+  section:nth-child(5) { animation-delay: 0.8s; }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--orange); /* Lighter orange meets WCAG AA for large text */
+    text-shadow:
+      0 0 10px var(--orange),
+      0 0 15px var(--pink);
+    border-bottom: 3px solid var(--pink);
+    padding-bottom: 0.3rem;
+  }
+
+  /* Articles Found */
+  #articles-list {
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-left: 0;
+    border-radius: 8px;
+    background: rgba(30, 30, 35, 0.8); /* Darker background for better contrast */
+    box-shadow:
+      inset 0 0 6px var(--cyan);
+  }
+  #articles-list li {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Higher opacity border */
+    cursor: pointer;
+    transition: background-color 0.35s ease, transform 0.2s ease;
+    font-weight: 600;
+    color: var(--cyan); /* Lighter cyan meets WCAG AA */
+    user-select: none;
+  }
+  #articles-list li:last-child {
+    border-bottom: none;
+  }
+  #articles-list li:hover {
+    background: var(--pink-dark); /* Darker pink for better contrast with white text */
+    color: #fff;
+    transform: translateX(8px);
+    box-shadow: var(--shadow-glow-pink);
+  }
+  #articles-list li a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Analysis & Synthesis paragraphs */
+  .analysis-paragraph, .synthesis-paragraph {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--text-light); /* Pure white for maximum contrast */
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    background: rgba(30, 30, 35, 0.6); /* Darker background for better contrast */
+    box-shadow: 0 0 8px var(--purple);
+    user-select: text;
+  }
+
+  /* Final Recommendation */
+  #final-recommendation {
+    /* Use darker gradient with white text overlay for better contrast */
+    background: linear-gradient(89deg, var(--pink-dark), var(--orange-dark), var(--cyan-dark), var(--purple-dark));
+    color: #fff; /* White text on darker gradient meets WCAG AA */
+    border-radius: 14px;
+    padding: 2rem 2rem;
+    box-shadow:
+      0 0 30px var(--pink),
+      0 0 40px var(--orange),
+      0 0 50px var(--cyan),
+      0 0 60px var(--purple);
+    text-align: center;
+    font-size: 1.6rem; /* Large text - 3:1 ratio acceptable */
+    font-weight: 800;
+    letter-spacing: 1.15px;
+    text-transform: uppercase;
+    cursor: default;
+    user-select: none;
+    transition: transform 0.3s ease;
+  }
+  #final-recommendation:hover {
+    transform: scale(1.07) rotate(1deg);
+    box-shadow:
+      0 0 40px var(--pink),
+      0 0 50px var(--orange),
+      0 0 60px var(--cyan),
+      0 0 70px var(--purple);
+  }
+
+  /* Positive Vibe captions */
+  .positive-vibe {
+    font-weight: 700;
+    color: var(--pink); /* Lighter pink meets WCAG AA for large text */
+    font-size: 1.2rem; /* Large text - 3:1 ratio acceptable */
+    margin-top: 0.6rem;
+    text-shadow: 0 0 8px var(--pink);
+    user-select: none;
+  }
+
+  /* Email section */
+  #email-section {
+    display: flex;
+    max-width: 1000px;
+    margin: 0 auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: rgba(30, 30, 35, 0.8); /* Darker background for better contrast */
+    border-radius: 10px;
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  #email-section input[type="email"] {
+    flex: 1;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--cyan); /* Visible border for better contrast */
+    outline: none;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.95); /* Light background for dark text */
+    color: var(--text-dark); /* Dark text on light background - excellent contrast */
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  #email-section input[type="email"]:focus {
+    box-shadow: 0 0 8px var(--purple);
+    background: #FFFFFF; /* Pure white on focus */
+    color: var(--text-dark);
+    border-color: var(--purple);
+  }
+  #email-section input[type="email"]::placeholder {
+    color: #666; /* Dark gray placeholder for good contrast */
+  }
+
+  #email-section button {
+    background: var(--pink-dark); /* Darker pink for better contrast with white text */
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.75rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--pink);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+  }
+  #email-section button:hover:not(:disabled),
+  #email-section button:focus:not(:disabled) {
+    background: var(--orange-dark); /* Darker orange for better contrast */
+    box-shadow: 0 0 20px var(--orange);
+  }
+  #email-section button:disabled {
+    background: rgba(233, 30, 99, 0.6); /* More opaque disabled state */
+    color: rgba(255, 255, 255, 0.7);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  #email-message {
+    margin-top: 0.7rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--pink); /* Lighter pink meets WCAG AA */
+    text-align: center;
+    height: 1.3rem;
+    user-select: none;
+  }
+
+  /* Scrollbar for articles list */
+  #articles-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  #articles-list::-webkit-scrollbar-track {
+    background: rgba(30, 30, 35, 0.8); /* Darker track for better visibility */
+  }
+  #articles-list::-webkit-scrollbar-thumb {
+    background: var(--pink-dark); /* Darker pink for better contrast */
+    border-radius: 6px;
+  }
+  #articles-list::-webkit-scrollbar-thumb:hover {
+    background: var(--pink); /* Lighter on hover */
+  }
+
+  /* Responsive */
+  @media (max-width: 768px){
+    body {
+      padding: 1rem 1rem 3rem;
+    }
+    header h1 {
+      font-size: 2.2rem;
+    }
+    main {
+      padding: 1.5rem 1.8rem;
+    }
+    section h2 {
+      font-size: 1.6rem;
+    }
+    #final-recommendation {
+      font-size: 1.4rem;
+      padding: 1.6rem 1.6rem;
+    }
+    #email-section {
+      flex-direction: column;
+      gap: 0.8rem;
+      padding: 1rem;
+    }
+    #email-section input[type="email"] {
+      width: 100%;
+    }
+    #email-section button {
+      width: 100%;
+    }
+  }
+</style>
+<script>
+            // Display current date
+            function updateDate() {
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const dateString = now.toLocaleDateString('en-US', options);
+                const dateElement = document.getElementById('report-date');
+                if (dateElement) {
+                    dateElement.textContent = 'Report Date: ' + dateString;
+                }
+            }
+            updateDate();
+            </script><script>
+            </script></head>
+<body>
+<header>
+<h1>Bitcoin Market Analysis Report<br/> <span class="positive-vibe">Fighting! Let's go! We're going to make it!</span></h1>
+<div aria-atomic="true" aria-live="polite" id="report-date">Report Date: Loading...</div>
+</header>
+<main>
+<section aria-label="Articles Found" id="articles-found" tabindex="0">
+<h2>Articles Found</h2>
+<ul id="articles-list">
+<li><a href="https://www.fxstreet.com/cryptocurrencies/bitcoin" rel="noopener noreferrer" target="_blank" title="FXStreet Article: Bitcoin (BTC) Price Hovering Around $102,000 Amid Bearish Sentiment">Bitcoin (BTC) Price Hovering Around $102,000 Amid Bearish Sentiment</a></li>
+<li><a href="https://finance.yahoo.com/quote/BTC-USD/" rel="noopener noreferrer" target="_blank" title="Yahoo Finance Bitcoin BTC Live Price, News, Chart &amp; Analysis">Bitcoin BTC (BTC-USD) Live Price, News, Chart &amp; Analysis</a></li>
+<li><a href="https://www.tradingview.com/symbols/BTCUSD/" rel="noopener noreferrer" target="_blank" title="TradingView Bitcoin Price and Chart">Bitcoin Price and Chart – TradingView</a></li>
+<li><a href="https://www.coindesk.com/" rel="noopener noreferrer" target="_blank" title="CoinDesk Crypto News and Price Data">CoinDesk: Bitcoin, Ethereum, XRP, Crypto News and Price Data</a></li>
+<li><a href="https://www.cnbc.com/cryptoworld/" rel="noopener noreferrer" target="_blank" title="CNBC Crypto World Latest News and Updates">Crypto World: latest crypto news and digital currency updates – CNBC</a></li>
+<li><a href="https://cryptoslate.com/" rel="noopener noreferrer" target="_blank" title="CryptoSlate Crypto News, Coin Prices &amp; Market Trends">CryptoSlate: Crypto News, Coin Prices &amp; Market Trends</a></li>
+<li><a href="https://www.theblock.co/" rel="noopener noreferrer" target="_blank" title="The Block Bitcoin, Ethereum &amp; Crypto News and Live Prices">The Block: Bitcoin, Ethereum &amp; Crypto News | Live Prices &amp; Analysis</a></li>
+<li><a href="https://www.investing.com/crypto/bitcoin" rel="noopener noreferrer" target="_blank" title="Investing.com Bitcoin Price and Technical Analysis">Bitcoin Price (BTC) | Bitcoin Value – Investing.com</a></li>
+<li><a href="https://bitbo.io/" rel="noopener noreferrer" target="_blank" title="Bitbo Live Bitcoin Price &amp; Chart">Bitbo: Live Bitcoin Price &amp; Chart</a></li>
+<li><a href="https://coinmarketcap.com/charts/" rel="noopener noreferrer" target="_blank" title="CoinMarketCap Live Cryptocurrency Charts &amp; Market Data">Live Cryptocurrency Charts &amp; Market Data – CoinMarketCap</a></li>
+</ul>
+</section>
+<section aria-label="Article Analysis and Summaries" id="article-analysis" tabindex="0">
+<h2>Article Analysis &amp; Summaries</h2>
+<article aria-label="FXStreet analysis and summary" class="analysis-paragraph">
+<strong>FXStreet Article:</strong> Bitcoin price is near $102,000 after losing about 7-8% this week amid bearish pressure primarily from long-term holders selling. Ethereum and Ripple face similar downside pressure, while some altcoins like Filecoin and Dash see rebounds. Bitcoin failed to hold above $103k-$105k support zones, suggesting potential further downside unless bulls regain control.
+    </article>
+<article aria-label="TradingView analysis and summary" class="analysis-paragraph">
+<strong>TradingView:</strong> Bitcoin trades just above 50-week EMA support, hovering around $103k. Spot Bitcoin ETFs saw $240 million inflows ending a six-day outflow streak. Price briefly dipped below $100,000 but recovered. Resistance lies at $105k and $113k. A break above resistance could trigger a bullish reversal.
+    </article>
+<article aria-label="CoinDesk analysis and summary" class="analysis-paragraph">
+<strong>CoinDesk:</strong> Bitcoin holds just above $100k as altcoins extend losses. U.S. bitcoin ETFs have positive inflows after persistent outflows. Ethereum struggles below $3,300 amid broader market weakness. Holding $100k is critical psychological support.
+    </article>
+<article aria-label="CNBC analysis and summary" class="analysis-paragraph">
+<strong>CNBC Crypto World:</strong> Bitcoin and Ether experiencing fourth negative week in five weeks. Bitcoin briefly dipped below $100k but rebounded. Institutional players accumulate select altcoins. Fed rate cuts and regulation affect market.
+    </article>
+<article aria-label="CryptoSlate analysis and summary" class="analysis-paragraph">
+<strong>CryptoSlate:</strong> Bitcoin ETFs reversed six days of outflows with $240 million inflows, boosting liquidity. Bulls eye reclaiming $112,500 resistance. Solana ETFs outperforming, potentially drawing BTC liquidity.
+    </article>
+<article aria-label="Bitbo.io analysis and summary" class="analysis-paragraph">
+<strong>Bitbo.io:</strong> Bitcoin trades near $103,000 with 24h range $99,170-$104,042. Market cap ~$2.05T. Mining difficulty down, hash rate steady. ETF volumes rising. Network data show healthy fundamentals.
+    </article>
+<article aria-label="CoinMarketCap market summary" class="analysis-paragraph">
+<strong>CoinMarketCap:</strong> Market cap ~$3.48 trillion, Bitcoin dominance 59.1%. ETF flows restoring after prior outflows. RSI and momentum indicators near neutral, signaling consolidation.
+    </article>
+</section>
+<section aria-label="Complete Market Synthesis Report" id="market-synthesis" tabindex="0">
+<h2>Market Synthesis</h2>
+<p class="synthesis-paragraph"><strong>1. Overall Market Sentiment:</strong> Neutral to bearish with cautious optimism. Selling pressure from long-term holders and macro uncertainties persist, but ETF inflows and institutional interest stabilize sentiment.</p>
+<p class="synthesis-paragraph"><strong>2. Key Themes &amp; Patterns:</strong> Price hovering near $100,000–101,000 support, resistance at $105,000–113,000. Persistent selling, ETF liquidity flows, altcoin competition, and technical indicators reflect a ranging market with potential recovery or further downside.</p>
+<p class="synthesis-paragraph"><strong>3. Price Trends:</strong> Bitcoin oscillates between $102,000-$103,000, intraweek dips below $100k recovered. Key support strong near $100k–101k; resistance at $105k and $112,500–113,000.</p>
+<p class="synthesis-paragraph"><strong>4. Major Catalysts:</strong> $240M bitcoin ETF inflows, anticipated Bitwise Dogecoin ETF launch, Federal Reserve outlook, institutional activity, regulatory updates, and altcoin market shifts drive dynamics.</p>
+<p class="synthesis-paragraph"><strong>5. Conflicting Information &amp; Uncertainties:</strong> ETF inflows show buying interest, but price remains below resistance. Macro risks and altcoin competition add volatility. Market reacts cautiously amid external unknowns.</p>
+<p class="synthesis-paragraph"><strong>6. Consensus vs. Outliers:</strong> Market seen consolidating within range. Consensus favors wait-and-see approach. Outliers cautiously bullish on institutional buying signals but overall neutral/bearish short-term sentiment dominates.</p>
+</section>
+<section aria-label="Final Trading Recommendation" id="final-recommendation" tabindex="0">
+<h2>Final Trading Recommendation</h2>
+<p style="color: #fff;">🟠 <strong>Recommendation:</strong> <span style="color:#FFB74D;">HOLD</span></p>
+<p style="color: #fff;">⚡ <strong>Confidence Level:</strong> Medium</p>
+<p style="color: #fff;">✅ <strong>Key Reasons:</strong></p>
+<ul style="margin-left: 1.4rem; margin-bottom: 1rem; list-style-type: '✅'; color: #fff;">
+<li>Bitcoin consolidates near $100,000–101,000 support, showing downside containment.</li>
+<li>Renewed institutional ETF inflows ($240M) signal cautious market stabilization.</li>
+<li>Neutral technical indicators with price near 50-week EMA; range-bound short term.</li>
+<li>Strong blockchain fundamentals supporting consolidation over collapse.</li>
+</ul>
+<p style="color: #fff;">⚠️ <strong>Risk Factors:</strong></p>
+<ul style="margin-left: 1.4rem; margin-bottom: 1rem; list-style-type: '⚠️'; color: #fff;">
+<li>Potential breaches below $100k support with increased selling by long-term holders.</li>
+<li>Macro uncertainties: Fed policies, regulation, geopolitical risks.</li>
+<li>Altcoin competition and shifts in liquidity could impact Bitcoin momentum.</li>
+<li>ETF inflows remain tentative and subject to reversal.</li>
+</ul>
+<p style="color: #fff;">🎯 <strong>Suggested Entry/Exit Points:</strong></p>
+<ul style="margin-left: 1.4rem; margin-bottom: 1rem; list-style-type: '🎯'; color: #fff;">
+<li><strong>Buy:</strong> Above $105,000 resistance with strong volume and ETF inflows, targeting $112,500–113,000.</li>
+<li><strong>Sell/Exit:</strong> Below $100,000 support with tightening stops amid adverse macro or selling momentum.</li>
+<li><strong>Hold:</strong> In absence of decisive breakout/breakdown, maintain positions vigilantly.</li>
+</ul>
+<p style="color: #fff;">⏳ <strong>Time Horizon:</strong> 1 to 3 weeks; watch ETF trends, macro news, and support/resistance.</p>
+<p style="margin-top: 1.2rem; letter-spacing: 2px; font-size: 1.25rem; font-weight: 700; color: #fff; text-shadow: 0 0 15px var(--pink);">Let's go! We're going to make it! Fighting!</p>
+</section>
+</main>
+<section aria-label="Email Report Section" id="email-section">
+<input aria-describedby="email-message" aria-required="true" autocomplete="email" id="user-email" placeholder="Enter your email address" required="" type="email"/>
+<button aria-busy="false" aria-live="polite" id="send-report-btn" onclick="sendReport()">Send Report</button>
+</section>
+<div aria-live="assertive" id="email-message" role="alert"></div>
+<script>
+  // Display current date in format: "Report Date: November 6, 2024"
+  function updateReportDate() {
+    const dateElem = document.getElementById('report-date');
+    const now = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = now.toLocaleDateString('en-US', options);
+    dateElem.textContent = 'Report Date: ' + formattedDate;
+  }
+  updateReportDate();
+
+  // Email validation regex (simple)
+  const emailInput = document.getElementById('user-email');
+  const sendBtn = document.getElementById('send-report-btn');
+  const emailMsg = document.getElementById('email-message');
+  
+  // Update sendReport function to use the correct button ID
+  window.sendReport = async function() {
+    const email = emailInput.value.trim();
+    
+    // Validate email
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || !emailPattern.test(email)) {
+      emailMsg.textContent = 'Please enter a valid email address!';
+      emailMsg.style.color = '#FF8FC7'; /* WCAG AA compliant lighter pink */
+      return;
+    }
+    
+    // Disable button and show loading
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+    emailMsg.textContent = 'Sending report...';
+    emailMsg.style.color = '#4DD0E1'; /* WCAG AA compliant lighter cyan */
+    
+    try {
+      const response = await fetch('http://localhost:5050/send-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        emailMsg.textContent = '✅ Report sent successfully!';
+        emailMsg.style.color = '#51cf66'; /* High contrast green for success */
+        emailInput.value = '';
+      } else {
+        emailMsg.textContent = '❌ Error: ' + (data.error || 'Failed to send report');
+        emailMsg.style.color = '#FF8FC7'; /* WCAG AA compliant lighter pink */
+      }
+    } catch (error) {
+      emailMsg.textContent = '❌ Error: Could not connect to server. Make sure the email API is running.';
+      emailMsg.style.color = '#FF8FC7'; /* WCAG AA compliant lighter pink */
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Report';
+    }
+  };
+
+  function validateEmail(email) {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+    return re.test(String(email).toLowerCase());
+  }
+
+  // Enable/disable button based on email validity
+  emailInput.addEventListener('input', () => {
+    const isValid = validateEmail(emailInput.value.trim());
+    sendBtn.disabled = !isValid;
+    if (!isValid && emailInput.value.trim().length > 0) {
+      emailMsg.textContent = 'Please enter a valid email address!';
+      emailMsg.style.color = '#FF8FC7'; /* Use lighter pink for better contrast */
+    } else {
+      emailMsg.textContent = '';
+    }
+  });
+
+  // Accessibility improvement: autofocus email on page load for quick user interaction
+  window.addEventListener('load', () => {
+    emailInput.focus();
+  });
+</script>
+</body>
+</html>

@@ -288,7 +288,7 @@ class BitcoinAnalyzer:
         
         # Task 5: Create HTML report
         self.website_task = Task(
-            description="""Create a stunning, SEVENTEEN-inspired HTML report (newpage.html) that includes:
+            description="""Create a stunning, SEVENTEEN-inspired HTML report (index.html) that includes:
             
             1. All article names/titles from the search results
             2. All article analyses and summaries from the reader agent
@@ -308,16 +308,31 @@ class BitcoinAnalyzer:
             - Make it mobile-responsive
             - Positive, encouraging tone throughout - make it feel like SEVENTEEN's positive energy
             
+            CRITICAL REQUIREMENTS:
+            - Display the current date prominently at the top of the page (update daily automatically using JavaScript)
+            - Add an email section with:
+              * A text input box for the user's email address
+              * A "Send Report" button that sends the report via email
+              * JavaScript to handle the email sending (connect to backend/API endpoint)
+              * Validation for email format
+              * Success/error messages after sending
+            - The date should be displayed in a clear, visible format (e.g., "Report Date: November 6, 2024")
+            - The email functionality should be integrated seamlessly into the SEVENTEEN design
+            
             Write the complete HTML file with embedded CSS and JavaScript.
-            The HTML should be a complete, standalone file that captures SEVENTEEN's vibrant, energetic, synchronized aesthetic.""",
+            The HTML should be a complete, standalone file that captures SEVENTEEN's vibrant, energetic, synchronized aesthetic.
+            Include JavaScript to display the current date and handle email sending functionality.""",
             agent=self.website_agent,
             context=[self.search_task, self.reader_task, self.synthesis_task, self.analyst_task],
-            expected_output="""A complete HTML file (newpage.html) with:
+            expected_output="""A complete HTML file (index.html) with:
             - SEVENTEEN-inspired vibrant color design (cyan, pink, purple, orange)
             - All article names displayed
             - All analyses and summaries
             - Complete synthesis report
             - Final recommendation prominently displayed
+            - Current date displayed prominently (updates daily)
+            - Email input box and "Send Report" button
+            - Email sending functionality with JavaScript
             - SEVENTEEN's positive, energetic tone throughout (Fighting!, Let's go!)
             - Synchronized animations and modern, clean styling"""
         )
@@ -361,6 +376,137 @@ class BitcoinAnalyzer:
         self._save_html_output(result)
         
         return result
+    
+    def _add_email_form_and_date(self, html_content):
+        """Add email form and date display to HTML content"""
+        try:
+            from bs4 import BeautifulSoup
+            
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Add date display script
+            date_script = soup.new_tag('script')
+            date_script.string = """
+            // Display current date
+            function updateDate() {
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const dateString = now.toLocaleDateString('en-US', options);
+                const dateElement = document.getElementById('report-date');
+                if (dateElement) {
+                    dateElement.textContent = 'Report Date: ' + dateString;
+                }
+            }
+            updateDate();
+            """
+            soup.head.append(date_script)
+            
+            # Add email form script
+            email_script = soup.new_tag('script')
+            email_script.string = """
+            async function sendReport() {
+                const emailInput = document.getElementById('user-email');
+                const email = emailInput.value.trim();
+                const statusDiv = document.getElementById('email-status');
+                
+                // Validate email
+                const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+                if (!email || !emailPattern.test(email)) {
+                    statusDiv.textContent = 'Please enter a valid email address';
+                    statusDiv.style.color = '#FF8FC7'; // WCAG AA compliant lighter pink
+                    return;
+                }
+                
+                // Disable button and show loading
+                const sendBtn = document.getElementById('send-btn');
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending...';
+                statusDiv.textContent = 'Sending report...';
+                statusDiv.style.color = '#4DD0E1'; // WCAG AA compliant lighter cyan
+                
+                try {
+                    const response = await fetch('http://localhost:5050/send-report', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: email })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        statusDiv.textContent = '✅ Report sent successfully!';
+                        statusDiv.style.color = '#51cf66'; // High contrast green
+                        emailInput.value = '';
+                    } else {
+                        statusDiv.textContent = '❌ Error: ' + (data.error || 'Failed to send report');
+                        statusDiv.style.color = '#FF8FC7'; // WCAG AA compliant lighter pink
+                    }
+                } catch (error) {
+                    statusDiv.textContent = '❌ Error: Could not connect to server. Make sure the email API is running.';
+                    statusDiv.style.color = '#FF8FC7'; // WCAG AA compliant lighter pink
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Report';
+                }
+            }
+            """
+            soup.head.append(email_script)
+            
+            # Find body and add date display and email form at the top
+            body = soup.body
+            if body:
+                # Create date display with WCAG AA compliant colors
+                date_div = soup.new_tag('div', id='report-date')
+                date_div['style'] = 'text-align: center; font-size: 1.2rem; font-weight: bold; margin: 20px 0; padding: 15px; background: rgba(30, 30, 35, 0.8); border-radius: 10px; color: #FFB74D;'  # WCAG AA compliant
+                date_div.string = 'Report Date: Loading...'
+                
+                # Create email form section with WCAG AA compliant colors
+                email_section = soup.new_tag('section', id='email-section')
+                email_section['style'] = 'max-width: 600px; margin: 30px auto; padding: 25px; background: rgba(30, 30, 35, 0.8); border-radius: 15px; box-shadow: 0 0 20px rgba(255, 143, 199, 0.3);'
+                
+                email_title = soup.new_tag('h2')
+                email_title.string = '📧 Send Report via Email'
+                email_title['style'] = 'color: #FF8FC7; text-align: center; margin-bottom: 20px;'  # WCAG AA compliant lighter pink
+                email_section.append(email_title)
+                
+                email_form = soup.new_tag('div')
+                email_form['style'] = 'display: flex; flex-direction: column; gap: 15px;'
+                
+                email_input = soup.new_tag('input')
+                email_input['type'] = 'email'
+                email_input['id'] = 'user-email'
+                email_input['placeholder'] = 'Enter your email address'
+                email_input['style'] = 'padding: 12px; font-size: 1rem; border: 2px solid #4DD0E1; border-radius: 8px; background: rgba(255, 255, 255, 0.95); color: #1A1A1A; outline: none;'  # Light bg, dark text for WCAG AA
+                email_input['required'] = True
+                
+                send_btn = soup.new_tag('button')
+                send_btn['id'] = 'send-btn'
+                send_btn['onclick'] = 'sendReport()'
+                send_btn.string = 'Send Report'
+                send_btn['style'] = 'padding: 12px 30px; font-size: 1.1rem; font-weight: bold; background: #E91E63; color: white; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;'  # Darker pink for WCAG AA
+                send_btn['onmouseover'] = "this.style.transform='scale(1.05)'; this.style.boxShadow='0 5px 20px rgba(233, 30, 99, 0.5)';"
+                send_btn['onmouseout'] = "this.style.transform='scale(1)'; this.style.boxShadow='none';"
+                
+                status_div = soup.new_tag('div')
+                status_div['id'] = 'email-status'
+                status_div['style'] = 'text-align: center; min-height: 25px; font-weight: 600; color: #FF8FC7;'  # WCAG AA compliant
+                
+                email_form.append(email_input)
+                email_form.append(send_btn)
+                email_form.append(status_div)
+                
+                email_section.append(email_form)
+                
+                # Insert at the beginning of body
+                body.insert(0, date_div)
+                body.insert(1, email_section)
+            
+            return str(soup)
+        except Exception as e:
+            print(f"Warning: Could not add email form and date: {e}")
+            return html_content
     
     def _save_html_output(self, result):
         """Extract and save HTML output from the website agent"""
@@ -411,13 +557,17 @@ class BitcoinAnalyzer:
 </body>
 </html>"""
             
-            # Save to newpage.html
-            output_path = os.path.join(os.getcwd(), "newpage.html")
+            # Add email form and date display
+            html_content = self._add_email_form_and_date(html_content)
+            
+            # Save to index.html
+            output_path = os.path.join(os.getcwd(), "index.html")
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
             
             print(f"\n✨ HTML report saved to: {output_path}")
             print(f"   Open it in your browser to see the SEVENTEEN-inspired report! Fighting! 💪")
+            print(f"   Don't forget to start the email API: python3.11 email_api.py")
             
         except Exception as e:
             print(f"\n⚠️  Warning: Could not save HTML output: {e}")

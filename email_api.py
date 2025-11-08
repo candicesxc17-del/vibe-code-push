@@ -1,16 +1,22 @@
 """
-Script to email the Bitcoin analysis report
+API endpoint for sending Bitcoin analysis reports via email
 """
 
 import os
 import smtplib
 import re
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+app = Flask(__name__)
+CORS(app)  # Allow cross-origin requests from the HTML page
 
 def extract_text_from_html(html_file):
     """Extract and clean text content from HTML file"""
@@ -43,7 +49,6 @@ def extract_text_from_html(html_file):
 def format_professional_report(raw_text):
     """Format the extracted text in a professional Wall Street trader tone"""
     
-    # Remove emojis and Gen Z slang, make it professional
     text = raw_text
     
     # Replace common Gen Z phrases with professional equivalents
@@ -79,58 +84,53 @@ def format_professional_report(raw_text):
         "]+", flags=re.UNICODE)
     text = emoji_pattern.sub('', text)
     
-    # Format as professional report
-    lines = text.split('\n')
-    formatted_lines = []
-    
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        
-        # Capitalize section headers
-        if line.isupper() or (len(line) < 50 and ':' in line):
-            formatted_lines.append(f"\n{line.upper()}\n{'=' * len(line)}\n")
-        else:
-            formatted_lines.append(line)
-    
-    return '\n'.join(formatted_lines)
+    return text
 
-def send_bitcoin_report():
-    """Send the Bitcoin analysis report via email"""
-    
-    # Get credentials from .env
-    gmail_email = os.getenv('GMAIL_EMAIL')
-    gmail_password = os.getenv('GMAIL_PASSWORD')
-    recipient_email = 'candice.shen@yale.edu'
-    
-    if not gmail_email or not gmail_password:
-        print("❌ Gmail credentials not found in .env file")
-        return False
-    
-    # Check if index.html exists
-    html_file = 'index.html'
-    if not os.path.exists(html_file):
-        print(f"❌ {html_file} not found!")
-        return False
-    
+@app.route('/send-report', methods=['POST'])
+def send_report():
+    """API endpoint to send Bitcoin analysis report via email"""
     try:
+        data = request.json
+        recipient_email = data.get('email')
+        
+        if not recipient_email:
+            return jsonify({'success': False, 'error': 'Email address is required'}), 400
+        
+        # Validate email format
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, recipient_email):
+            return jsonify({'success': False, 'error': 'Invalid email format'}), 400
+        
+        # Get credentials from .env
+        gmail_email = os.getenv('GMAIL_EMAIL')
+        gmail_password = os.getenv('GMAIL_PASSWORD')
+        
+        if not gmail_email or not gmail_password:
+            return jsonify({'success': False, 'error': 'Email service not configured'}), 500
+        
+        # Check if index.html exists
+        html_file = 'index.html'
+        if not os.path.exists(html_file):
+            return jsonify({'success': False, 'error': 'Report file not found'}), 404
+        
         # Extract and format text from HTML
-        print("📄 Extracting content from HTML...")
         raw_text = extract_text_from_html(html_file)
-        
         if not raw_text:
-            print("❌ Failed to extract text from HTML")
-            return False
+            return jsonify({'success': False, 'error': 'Failed to extract report content'}), 500
         
-        # Format professionally
         professional_report = format_professional_report(raw_text)
         
-        # Create professional email body
+        # Create email
+        msg = MIMEMultipart()
+        msg['From'] = gmail_email
+        msg['To'] = recipient_email
+        msg['Subject'] = 'Bitcoin Trading Analysis Report - Market Intelligence'
+        
+        # Email body
         body = f"""BITCOIN MARKET ANALYSIS REPORT
 {'-' * 50}
 
-Dear Candice,
+Dear Valued Client,
 
 Please find below our comprehensive Bitcoin market analysis and trading recommendations based on recent market data and sentiment analysis.
 
@@ -151,29 +151,26 @@ Bitcoin Analysis System
 This report was generated automatically based on real-time market data and sentiment analysis.
 """
         
-        # Create message
-        msg = MIMEText(body, 'plain')
-        msg['From'] = gmail_email
-        msg['To'] = recipient_email
-        msg['Subject'] = 'Bitcoin Trading Analysis Report - Market Intelligence'
+        msg.attach(MIMEText(body, 'plain'))
         
         # Send email
-        print(f"📧 Sending email to {recipient_email}...")
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(gmail_email, gmail_password)
         server.sendmail(gmail_email, recipient_email, msg.as_string())
         server.quit()
         
-        print(f"✅ Email sent successfully to {recipient_email}!")
-        return True
+        return jsonify({'success': True, 'message': f'Report sent successfully to {recipient_email}'}), 200
         
     except Exception as e:
-        print(f"❌ Error sending email: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-if __name__ == "__main__":
-    send_bitcoin_report()
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({'status': 'ok'}), 200
+
+if __name__ == '__main__':
+    port = int(os.getenv('EMAIL_API_PORT', '5050'))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
