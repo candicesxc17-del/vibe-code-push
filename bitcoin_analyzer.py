@@ -602,7 +602,7 @@ class BitcoinAnalyzer:
             synthesis = extract_synthesis()
             recommendation = extract_recommendation()
 
-            def shorten_text(text: str, max_chars: int = 120) -> str:
+            def shorten_text(text: str, max_chars: int = 160) -> str:
                 cleaned = re.sub(r"\s+", " ", text or "").strip()
                 if not cleaned:
                     return ""
@@ -610,6 +610,9 @@ class BitcoinAnalyzer:
                 snippet = sentences[0] if sentences else cleaned
                 if len(snippet) > max_chars:
                     snippet = snippet[:max_chars].rsplit(" ", 1)[0] + "…"
+                snippet = snippet.strip()
+                if snippet and snippet[-1] not in ".!?…":
+                    snippet += "."
                 return snippet
 
             def unique_snippets(
@@ -661,24 +664,35 @@ class BitcoinAnalyzer:
                 seen_analysis.add(key)
                 unique_analysis_snippets.append(snippet)
 
-            analysis_bullets = []
+            analysis_entries = []
             max_articles = min(len(articles), len(unique_analysis_snippets), 6)
+            transition_phrases = [
+                "The report highlights that",
+                "In addition, the analysis notes that",
+                "Furthermore, coverage indicates that",
+                "Another perspective explains that",
+                "Market commentary confirms that",
+                "Finally, observers point out that",
+            ]
             for idx in range(max_articles):
                 article = articles[idx]
                 summary = unique_analysis_snippets[idx] if idx < len(unique_analysis_snippets) else ""
+                if not summary:
+                    continue
                 title_html = (
                     f'<a href="{article["href"]}" target="_blank" rel="noopener noreferrer">{article["title"]}</a>'
                     if article["href"]
                     else article["title"]
                 )
-                bullet_text = summary or "No concise summary available yet."
-                analysis_bullets.append(
-                    f'<li><span class="bullet-title">{title_html}</span><span class="bullet-text"> — {bullet_text}</span></li>'
-                )
+                lead_in = "According to"
+                if idx < len(transition_phrases):
+                    lead_in = transition_phrases[idx]
+                paragraph = f"<p class=\"analysis-entry\"><span class=\"bullet-title\">{title_html}</span>: {lead_in} {summary}</p>"
+                analysis_entries.append(paragraph)
 
             analysis_html = (
-                "<ul class=\"analysis-brief\">" + "\n          ".join(analysis_bullets) + "</ul>"
-                if analysis_bullets
+                "\n          ".join(analysis_entries)
+                if analysis_entries
                 else '<p class="empty-state">Analysis summaries are not available.</p>'
             )
 
@@ -686,12 +700,21 @@ class BitcoinAnalyzer:
             for paragraph in synthesis:
                 synthesis_sentences.extend(re.split(r"(?<=[.!?])\s+", paragraph))
             synthesis_points = unique_snippets(synthesis_sentences, max_items=4)
-            synthesis_points = [shorten_text(point, max_chars=160) for point in synthesis_points]
-            synthesis_html = (
-                "<ul class=\"synthesis-brief\">" + "\n          ".join(f"<li>{pt}</li>" for pt in synthesis_points) + "</ul>"
-                if synthesis_points
-                else '<p class="empty-state">Market synthesis is not available.</p>'
-            )
+            synthesis_points = [shorten_text(point, max_chars=220) for point in synthesis_points]
+            if synthesis_points:
+                synthesis_paragraphs = []
+                connectors = [
+                    "Overall,",
+                    "In the near term,",
+                    "From a structural standpoint,",
+                    "Looking ahead,"
+                ]
+                for idx, point in enumerate(synthesis_points):
+                    connector = connectors[idx] if idx < len(connectors) else "Additionally,"
+                    synthesis_paragraphs.append(f"<p class=\"synthesis-entry\">{connector} {point}</p>")
+                synthesis_html = "\n          ".join(synthesis_paragraphs)
+            else:
+                synthesis_html = '<p class="empty-state">Market synthesis is not available.</p>'
 
             recommendation_lines = recommendation.get("paragraphs", [])
             recommendation_summary = ""
@@ -950,26 +973,23 @@ class BitcoinAnalyzer:
     .archive-list li a {{
       color: #0b63ce;
     }}
-    .analysis-brief,
-    .synthesis-brief,
-    .rec-points {{
-      list-style: disc;
-      padding-left: 1.5rem;
-      margin: 0;
-    }}
-    .analysis-brief li,
-    .synthesis-brief li,
-    .rec-points li {{
-      margin-bottom: 0.6rem;
+    .analysis-entry {{
+      margin: 0 0 1.2rem 0;
       font-size: 1rem;
-      line-height: 1.55;
-      color: #333333;
+      line-height: 1.65;
+      color: #2f3b48;
     }}
-    .bullet-title {{
+    .analysis-entry .bullet-title {{
       font-weight: 600;
       color: #102542;
     }}
-    .bullet-text {{
+    .analysis-entry a {{
+      color: #0b63ce;
+    }}
+    .synthesis-entry {{
+      margin: 0 0 1.1rem 0;
+      font-size: 1rem;
+      line-height: 1.65;
       color: #2f3b48;
     }}
     .recommendation-summary {{
